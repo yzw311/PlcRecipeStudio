@@ -66,18 +66,18 @@ public class HardeningP1Tests
     [SkippableFact]
     public async Task 保存配方_下限大于上限_被拒()
     {
-        var host = await TestHost.CreateAsync().ConfigureAwait(false);
+        var host = await TestHost.CreateAsync();
         await using var _ = host;
-        var device = await host.CreateMockDeviceAsync("1#机").ConfigureAwait(false);
-        var recipe = await host.CreateRecipeWithRowsAsync(device, "标准配方").ConfigureAwait(false);
+        var device = await host.CreateMockDeviceAsync("1#机");
+        var recipe = await host.CreateRecipeWithRowsAsync(device, "标准配方");
 
-        var rows = (await host.Recipes.GetRecipeAsync(recipe.Id).ConfigureAwait(false)).Items;
+        var rows = (await host.Recipes.GetRecipeAsync(recipe.Id)).Items;
         var temp = rows.First(r => r.Name == "温度");
         temp.UpperLimit = 10;
         temp.LowerLimit = 20;
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            host.Recipes.SaveRecipeAsync(recipe.Id, rows, "admin")).ConfigureAwait(false);
+            host.Recipes.SaveRecipeAsync(recipe.Id, rows, "admin"));
     }
 
     // ---------- 配方水印（下载写入"配方名|v版本"） ----------
@@ -85,18 +85,18 @@ public class HardeningP1Tests
     [SkippableFact]
     public async Task 下载_设备配置标识地址_写入水印且回读一致()
     {
-        var host = await TestHost.CreateAsync().ConfigureAwait(false);
+        var host = await TestHost.CreateAsync();
         await using var _ = host;
-        var device = await host.CreateMockDeviceAsync("1#机").ConfigureAwait(false);
+        var device = await host.CreateMockDeviceAsync("1#机");
         device.RecipeTagAddress = "D500";
         device.RecipeTagWords = 12;
-        var recipe = await host.CreateRecipeWithRowsAsync(device, "标准配方").ConfigureAwait(false); // v2
+        var recipe = await host.CreateRecipeWithRowsAsync(device, "标准配方"); // v2
 
-        var result = await host.Transfers.DownloadAsync(device, recipe).ConfigureAwait(false);
+        var result = await host.Transfers.DownloadAsync(device, recipe);
         Assert.Equal(TransferStatus.Success, result.Status);
         Assert.Contains("配方标识已写入", result.Message);
 
-        var client = (MockPlcClient)await host.Connections.GetClientAsync(device).ConfigureAwait(false);
+        var client = (MockPlcClient)await host.Connections.GetClientAsync(device);
         var tagItem = new RecipeItem
         {
             Name = "配方标识",
@@ -111,16 +111,16 @@ public class HardeningP1Tests
     [SkippableFact]
     public async Task 下载_未配置标识地址_不写水印行为不变()
     {
-        var host = await TestHost.CreateAsync().ConfigureAwait(false);
+        var host = await TestHost.CreateAsync();
         await using var _ = host;
-        var device = await host.CreateMockDeviceAsync("1#机").ConfigureAwait(false);
-        var recipe = await host.CreateRecipeWithRowsAsync(device, "标准配方").ConfigureAwait(false);
+        var device = await host.CreateMockDeviceAsync("1#机");
+        var recipe = await host.CreateRecipeWithRowsAsync(device, "标准配方");
 
-        var result = await host.Transfers.DownloadAsync(device, recipe).ConfigureAwait(false);
+        var result = await host.Transfers.DownloadAsync(device, recipe);
         Assert.Equal(TransferStatus.Success, result.Status);
         Assert.DoesNotContain("配方标识", result.Message);
 
-        var client = (MockPlcClient)await host.Connections.GetClientAsync(device).ConfigureAwait(false);
+        var client = (MockPlcClient)await host.Connections.GetClientAsync(device);
         Assert.All(Enumerable.Range(0, 4).Select(i => client.GetWordValue("D", 500 + i)), w => Assert.Equal(0, w));
     }
 }

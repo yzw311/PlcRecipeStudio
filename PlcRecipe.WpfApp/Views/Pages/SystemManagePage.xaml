@@ -133,6 +133,7 @@
                             <RowDefinition Height="40"/>
                             <RowDefinition Height="40"/>
                             <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Text="启动需要登录" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
@@ -184,9 +185,14 @@
                         <TextBox Grid.Row="11" Grid.Column="1" Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" Height="30"
                                  VerticalContentAlignment="Center"/>
 
-                        <TextBlock Grid.Row="12" Text="登录页默认口令提示" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                        <TextBlock Grid.Row="12" Text="API 角色映射" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                   ToolTip="多密钥分权：reader:key1;engineer:key2;admin:key3（reader=操作员、engineer=工程师）。命中映射密钥按对应角色放行，未知角色整条忽略；留空 = 主密钥即管理员"/>
+                        <TextBox Grid.Row="12" Grid.Column="1" Text="{Binding ApiKeyRoles, UpdateSourceTrigger=PropertyChanged}" Height="30"
+                                 VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="13" Text="登录页默认口令提示" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
                                    ToolTip="是否在登录页显示首次安装配置提示；产线部署建议关闭"/>
-                        <CheckBox Grid.Row="12" Grid.Column="1" IsChecked="{Binding ShowDefaultCredentialHint}" VerticalAlignment="Center"/>
+                        <CheckBox Grid.Row="13" Grid.Column="1" IsChecked="{Binding ShowDefaultCredentialHint}" VerticalAlignment="Center"/>
                     </Grid>
                     <Button Content="保存设置" Command="{Binding SaveSettingsCommand}" Height="36" Width="120" Margin="0,16,0,0"
                             HorizontalAlignment="Left"

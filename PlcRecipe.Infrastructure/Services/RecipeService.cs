@@ -73,6 +73,8 @@ public class RecipeService(IRecipeFileStore fileStore, IDeviceService devices) :
     {
         name = name.Trim();
         if (name.Length == 0) throw new ArgumentException("配方名不能为空");
+        if (ContainsFileSeparator(name))
+            throw new InvalidOperationException("配方名不能包含竖线“|”或换行符（配方文件格式的保留字符）");
         var device = (await devices.GetDevicesAsync(true, ct).ConfigureAwait(false))
             .FirstOrDefault(d => d.Id == deviceId) ?? throw new InvalidOperationException("设备不存在");
         if (fileStore.Exists(device.Name, name))
@@ -100,6 +102,8 @@ public class RecipeService(IRecipeFileStore fileStore, IDeviceService devices) :
     {
         newName = newName.Trim();
         if (newName.Length == 0) throw new ArgumentException("配方名不能为空");
+        if (ContainsFileSeparator(newName))
+            throw new InvalidOperationException("配方名不能包含竖线“|”或换行符（配方文件格式的保留字符）");
         var src = await GetRecipeAsync(recipeId, ct).ConfigureAwait(false);
         if (fileStore.Exists(src.Device?.Name ?? "未分配", newName))
             throw new InvalidOperationException($"配方“{newName}”已存在");
@@ -125,6 +129,8 @@ public class RecipeService(IRecipeFileStore fileStore, IDeviceService devices) :
     public async Task RenameRecipeAsync(int recipeId, string newName, string? user, CancellationToken ct = default)
     {
         newName = newName.Trim();
+        if (ContainsFileSeparator(newName))
+            throw new InvalidOperationException("配方名不能包含竖线“|”或换行符（配方文件格式的保留字符）");
         var src = await GetRecipeAsync(recipeId, ct).ConfigureAwait(false);
         if (src.Name == newName) return;
         await fileStore.RenameAsync(src.Device?.Name ?? "未分配", src.Name, newName).ConfigureAwait(false);
@@ -191,20 +197,18 @@ public class RecipeService(IRecipeFileStore fileStore, IDeviceService devices) :
             string.IsNullOrWhiteSpace(changeNote) ? "保存" : changeNote.Trim()).ConfigureAwait(false);
     }
 
-    /// <summary>配方文件（txt）以竖线/换行作分隔符；名称/单位/备注等自由文本进入文件前必须过滤。</summary>
+    /// <summary>配方文件（txt）以竖线/换行作分隔符；名称/单位/备注/值进入文件前必须过滤。</summary>
     private static bool ContainsFileSeparator(string? text) =>
         !string.IsNullOrEmpty(text) && text.IndexOfAny(ValueCodec.FileSeparatorChars) >= 0;
-
-    /// <summary>PLC 读回的字符串值可能天然包含保留字符（如工艺文本），落库前等价替换，保证文件可往返解析。</summary>
-    private static string SanitizeFileValue(string value) => value;
 
     public async Task ApplyReadValuesAsync(int recipeId, IReadOnlyDictionary<string, string> valuesByName, string? user, CancellationToken ct = default)
     {
         var existing = await GetRecipeAsync(recipeId, ct).ConfigureAwait(false);
         foreach (var item in existing.Items)
         {
+            // PLC 读回值可能天然包含保留字符：写入时由 RecipeFileStore.Escape 统一转义，落库原样保留
             if (valuesByName.TryGetValue(item.Name, out var value))
-                item.Value = SanitizeFileValue(value);
+                item.Value = value;
         }
         var newVersion = existing.Version + 1;
         await fileStore.SaveAsync(existing.Device?.Name ?? "未分配", existing.Name, newVersion, existing.Items).ConfigureAwait(false);

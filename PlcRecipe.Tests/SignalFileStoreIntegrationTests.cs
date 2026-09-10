@@ -14,8 +14,8 @@ public class SignalFileStoreIntegrationTests
 {
     private static async Task<(TestHost Host, PlcDevice Device, MockPlcClient Client)> SetupSignalAsync(TestHost host)
     {
-        var device = await host.CreateMockDeviceAsync("1#机", signal: true, recipeNameAddress: "D920").ConfigureAwait(false);
-        var client = (MockPlcClient)await host.Connections.GetClientAsync(device).ConfigureAwait(false);
+        var device = await host.CreateMockDeviceAsync("1#机", signal: true, recipeNameAddress: "D920");
+        var client = (MockPlcClient)await host.Connections.GetClientAsync(device);
         return (host, device, client);
     }
 
@@ -30,12 +30,12 @@ public class SignalFileStoreIntegrationTests
     [SkippableFact]
     public async Task 信号下载_按Pfdoc同名txt内容下发()
     {
-        var host = await TestHost.CreateAsync().ConfigureAwait(false);
+        var host = await TestHost.CreateAsync();
         await using var _ = host;
-        var (_, device, client) = await SetupSignalAsync(host).ConfigureAwait(false);
+        var (_, device, client) = await SetupSignalAsync(host);
 
         // 软件内保存配方 → 自动写入 Pfdoc txt
-        await host.CreateRecipeWithRowsAsync(device, "MOLD1").ConfigureAwait(false); // v2，温度=12.5
+        await host.CreateRecipeWithRowsAsync(device, "MOLD1"); // v2，温度=12.5
         Assert.True(host.FileStore.Exists("1#机", "MOLD1"));
 
         // PLC 报同名 + 置下载请求位
@@ -44,7 +44,7 @@ public class SignalFileStoreIntegrationTests
 
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (!client.GetBitValue("M", 902) && DateTime.UtcNow < deadline)
-            await Task.Delay(50).ConfigureAwait(false);
+            await Task.Delay(50);
         Assert.True(client.GetBitValue("M", 902), "完成位未置位");
         Assert.False(client.GetBitValue("M", 903), "失败位不应置位");
         Assert.True(client.GetWordValue("D", 100) != 0 || client.GetWordValue("D", 101) != 0, "配方数据未写入");
@@ -54,13 +54,13 @@ public class SignalFileStoreIntegrationTests
     [SkippableFact]
     public async Task 信号下载_Pfdoc无同名txt_失败位且PLC数据不被触碰()
     {
-        var host = await TestHost.CreateAsync().ConfigureAwait(false);
+        var host = await TestHost.CreateAsync();
         await using var _ = host;
-        var (_, device, client) = await SetupSignalAsync(host).ConfigureAwait(false);
+        var (_, device, client) = await SetupSignalAsync(host);
 
         // DB 里有配方但 Pfdoc 里删掉 txt → 下载必须失败（文件库为准）
-        await host.CreateRecipeWithRowsAsync(device, "MOLD1").ConfigureAwait(false);
-        await host.FileStore.DeleteAsync("1#机", "MOLD1").ConfigureAwait(false);
+        await host.CreateRecipeWithRowsAsync(device, "MOLD1");
+        await host.FileStore.DeleteAsync("1#机", "MOLD1");
         Assert.False(host.FileStore.Exists("1#机", "MOLD1"));
 
         WriteRecipeName(client, "MOLD1");
@@ -68,7 +68,7 @@ public class SignalFileStoreIntegrationTests
 
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (!client.GetBitValue("M", 903) && DateTime.UtcNow < deadline)
-            await Task.Delay(50).ConfigureAwait(false);
+            await Task.Delay(50);
         Assert.True(client.GetBitValue("M", 903), "失败位应置位");
         Assert.False(client.GetBitValue("M", 902), "完成位不应置位");
         Assert.Equal(0, client.GetWordValue("D", 100)); // 配方数据未被写入
@@ -78,13 +78,13 @@ public class SignalFileStoreIntegrationTests
     [SkippableFact]
     public async Task 信号上传_Pfdoc已有同名txt_按文件结构读值并更新()
     {
-        var host = await TestHost.CreateAsync().ConfigureAwait(false);
+        var host = await TestHost.CreateAsync();
         await using var _ = host;
-        var (_, device, client) = await SetupSignalAsync(host).ConfigureAwait(false);
-        var template = await host.CreateRecipeWithRowsAsync(device, "MOLD1").ConfigureAwait(false); // v2
+        var (_, device, client) = await SetupSignalAsync(host);
+        var template = await host.CreateRecipeWithRowsAsync(device, "MOLD1"); // v2
 
         // 先把 MOLD1 下载到 PLC，再篡改一个值模拟现场调整
-        await host.Transfers.DownloadAsync(device, template).ConfigureAwait(false);
+        await host.Transfers.DownloadAsync(device, template);
         var speedRow = template.Items.First(i => i.Name == "速度");
         var w = ValueCodec.Encode(speedRow, "77777");
         client.SetWordValue("D", 102, w[0]);
@@ -98,9 +98,9 @@ public class SignalFileStoreIntegrationTests
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (DateTime.UtcNow < deadline)
         {
-            doc = await host.FileStore.TryLoadAsync("1#机", "MOLD1").ConfigureAwait(false);
+            doc = await host.FileStore.TryLoadAsync("1#机", "MOLD1");
             if (doc != null && doc.Version >= 3) break;
-            await Task.Delay(50).ConfigureAwait(false);
+            await Task.Delay(50);
         }
         Assert.NotNull(doc);
         Assert.True(doc!.Version >= 3, "txt 版本应 +1");
@@ -113,12 +113,12 @@ public class SignalFileStoreIntegrationTests
     [SkippableFact]
     public async Task 信号上传_Pfdoc无同名txt_自动新建txt()
     {
-        var host = await TestHost.CreateAsync().ConfigureAwait(false);
+        var host = await TestHost.CreateAsync();
         await using var _ = host;
-        var (_, device, client) = await SetupSignalAsync(host).ConfigureAwait(false);
-        var template = await host.CreateRecipeWithRowsAsync(device, "MOLD1").ConfigureAwait(false);
+        var (_, device, client) = await SetupSignalAsync(host);
+        var template = await host.CreateRecipeWithRowsAsync(device, "MOLD1");
 
-        await host.Transfers.DownloadAsync(device, template).ConfigureAwait(false);
+        await host.Transfers.DownloadAsync(device, template);
         var speedRow = template.Items.First(i => i.Name == "速度");
         var w = ValueCodec.Encode(speedRow, "100000");
         client.SetWordValue("D", 102, w[0]);
@@ -132,9 +132,9 @@ public class SignalFileStoreIntegrationTests
         RecipeFileDocument? created = null;
         while (DateTime.UtcNow < deadline)
         {
-            created = await host.FileStore.TryLoadAsync("1#机", "MOLD2").ConfigureAwait(false);
+            created = await host.FileStore.TryLoadAsync("1#机", "MOLD2");
             if (created != null) break;
-            await Task.Delay(50).ConfigureAwait(false);
+            await Task.Delay(50);
         }
         Assert.NotNull(created);
         Assert.Equal(7, created!.Items.Count);

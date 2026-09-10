@@ -29,7 +29,7 @@ public sealed class MelsecMc3ESimulator : IAsyncDisposable
     {
         while (!ct.IsCancellationRequested)
         {
-            var client = await _listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+            var client = await _listener.AcceptTcpClientAsync(ct);
             _ = HandleClientAsync(client, ct);
         }
     }
@@ -43,11 +43,11 @@ public sealed class MelsecMc3ESimulator : IAsyncDisposable
         {
             while (!ct.IsCancellationRequested)
             {
-                if (!await ReadExactAsync(stream, header, ct).ConfigureAwait(false)) return;
+                if (!await ReadExactAsync(stream, header, ct)) return;
                 if (header[0] != 0x50 || header[1] != 0x00) return; // 副头部校验
                 int dataLen = BinaryPrimitives.ReadUInt16LittleEndian(header.AsSpan(7));
                 var app = new byte[dataLen];
-                if (!await ReadExactAsync(stream, app, ct).ConfigureAwait(false)) return;
+                if (!await ReadExactAsync(stream, app, ct)) return;
                 // app: watchdog(2) command(2) subcmd(2) devNo(3) code(1) points(2) [data]
                 ushort command = BinaryPrimitives.ReadUInt16LittleEndian(app.AsSpan(2, 2));
                 int offset = app[6] | (app[7] << 8) | (app[8] << 16);
@@ -103,7 +103,7 @@ public sealed class MelsecMc3ESimulator : IAsyncDisposable
                 BinaryPrimitives.WriteUInt16LittleEndian(resp.AsSpan(7), (ushort)(2 + body.Length));
                 // endCode=0
                 Array.Copy(body, 0, resp, 11, body.Length);
-                await stream.WriteAsync(resp, ct).ConfigureAwait(false);
+                await stream.WriteAsync(resp, ct);
             }
         }
         catch
@@ -117,7 +117,7 @@ public sealed class MelsecMc3ESimulator : IAsyncDisposable
         int read = 0;
         while (read < buffer.Length)
         {
-            int n = await stream.ReadAsync(buffer.AsMemory(read), ct).ConfigureAwait(false);
+            int n = await stream.ReadAsync(buffer.AsMemory(read), ct);
             if (n <= 0) return false;
             read += n;
         }
@@ -128,7 +128,7 @@ public sealed class MelsecMc3ESimulator : IAsyncDisposable
     {
         _cts.Cancel();
         _listener.Stop();
-        try { if (_acceptTask != null) await _acceptTask.ConfigureAwait(false); } catch { /* 忽略 */ }
+        try { if (_acceptTask != null) await _acceptTask; } catch { /* 忽略 */ }
         _cts.Dispose();
     }
 }

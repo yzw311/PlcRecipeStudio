@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- 引用 PlcRecipe.Server（Sdk.Web）后测试宿主需要 AspNetCore.App 框架；本机仅装 10.x 运行时，允许向最新主版本前滚 -->
+    <RollForward>LatestMajor</RollForward>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -25,6 +27,10 @@
     <ProjectReference Include="..\PlcRecipe.Drivers\PlcRecipe.Drivers.csproj" />
     <ProjectReference Include="..\PlcRecipe.Infrastructure\PlcRecipe.Infrastructure.csproj" />
     <ProjectReference Include="..\PlcRecipe.WpfApp\PlcRecipe.WpfApp.csproj" />
+    <ProjectReference Include="..\PlcRecipe.Server\PlcRecipe.Server.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

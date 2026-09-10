@@ -48,7 +48,7 @@ public sealed class TestHost : IAsyncDisposable
         Environment.SetEnvironmentVariable(DbInitializer.InitialAdminPasswordEnvironmentVariable, "Test-only-Admin-Password-123!");
         try
         {
-            await provider.InitializeDatabaseAsync().ConfigureAwait(false);
+            await provider.InitializeDatabaseAsync();
         }
         finally
         {
@@ -56,7 +56,7 @@ public sealed class TestHost : IAsyncDisposable
         }
 
         var users = provider.GetRequiredService<IUserService>();
-        var admin = await users.VerifyAsync(DbInitializer.DefaultAdminName, "Test-only-Admin-Password-123!").ConfigureAwait(false)
+        var admin = await users.VerifyAsync(DbInitializer.DefaultAdminName, "Test-only-Admin-Password-123!")
                     ?? throw new InvalidOperationException("管理员登录失败");
         provider.GetRequiredService<ICurrentUserService>().Set(admin);
         return new TestHost(provider, dataDir);
@@ -80,7 +80,7 @@ public sealed class TestHost : IAsyncDisposable
             DoneBitAddress = signal ? "M902" : null,
             FailBitAddress = signal ? "M903" : null,
             PollIntervalMs = 100
-        }).ConfigureAwait(false);
+        });
     }
 
     /// <summary>把 ASCII 名字写入模拟 PLC 的字符串区（模拟 PLC 侧写配方名）。</summary>
@@ -95,10 +95,10 @@ public sealed class TestHost : IAsyncDisposable
     /// <summary>为设备创建带标准数据行的配方。</summary>
     public async Task<Recipe> CreateRecipeWithRowsAsync(PlcDevice device, string name)
     {
-        var recipe = await Recipes.CreateRecipeAsync(device.Id, name, null, "admin").ConfigureAwait(false);
+        var recipe = await Recipes.CreateRecipeAsync(device.Id, name, null, "admin");
         var rows = StandardRows();
-        await Recipes.SaveRecipeAsync(recipe.Id, rows, "admin").ConfigureAwait(false);
-        return await Recipes.GetRecipeAsync(recipe.Id).ConfigureAwait(false);
+        await Recipes.SaveRecipeAsync(recipe.Id, rows, "admin");
+        return await Recipes.GetRecipeAsync(recipe.Id);
     }
 
     /// <summary>标准测试数据行（与 Mock 地址约定一致）。</summary>
@@ -115,7 +115,7 @@ public sealed class TestHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await Provider.ShutdownPlcAsync().ConfigureAwait(false);
+        await Provider.ShutdownPlcAsync();
         try { Directory.Delete(DataDir, true); } catch { /* 忽略 */ }
     }
 }

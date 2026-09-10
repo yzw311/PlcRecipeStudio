@@ -27,7 +27,7 @@ public sealed class OmronFinsSimulator : IAsyncDisposable
     {
         while (!ct.IsCancellationRequested)
         {
-            var client = await _listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+            var client = await _listener.AcceptTcpClientAsync(ct);
             _ = HandleClientAsync(client, ct);
         }
     }
@@ -39,7 +39,7 @@ public sealed class OmronFinsSimulator : IAsyncDisposable
 
         // 节点握手：请求 20 字节 = FINS + len=12 + cmd(4)=0 + clientNode(4BE)@[12..15]
         var hs = new byte[20];
-        if (!await ReadExactAsync(stream, hs, ct).ConfigureAwait(false)) return;
+        if (!await ReadExactAsync(stream, hs, ct)) return;
         if (hs[0] != (byte)'F' || hs[1] != (byte)'I' || hs[2] != (byte)'N' || hs[3] != (byte)'S') return;
         if (hs[11] != 0) return; // cmd 字段必须为 0（节点分配请求）
         byte assignedClientNode = hs[15]; // 采纳请求携带的 node（4BE 末字节）
@@ -52,18 +52,18 @@ public sealed class OmronFinsSimulator : IAsyncDisposable
         BinaryPrimitives.WriteInt32BigEndian(hsResp.AsSpan(12), 0);       // 错误码 = 0
         hsResp[19] = assignedClientNode;                                  // 分配的 client node（4BE 末字节）
         hsResp[23] = 10;                                                  // 服务器节点号（4BE 末字节）
-        await stream.WriteAsync(hsResp, ct).ConfigureAwait(false);
+        await stream.WriteAsync(hsResp, ct);
 
         var header = new byte[8];
         try
         {
             while (!ct.IsCancellationRequested)
             {
-                if (!await ReadExactAsync(stream, header, ct).ConfigureAwait(false)) return;
+                if (!await ReadExactAsync(stream, header, ct)) return;
                 if (header[0] != (byte)'F' || header[1] != (byte)'I' || header[2] != (byte)'N' || header[3] != (byte)'S') return;
                 int len = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(4));
                 var seg = new byte[len];
-                if (!await ReadExactAsync(stream, seg, ct).ConfigureAwait(false)) return;
+                if (!await ReadExactAsync(stream, seg, ct)) return;
                 // 数据段：cmd(4)@0 + 保留(4)@4 + FINS 帧@8（ICF@8 ... SID@17、MRC SRC@18..19、指令@20..）
                 if (len < 20) return; // 最短：cmd4+res4+FINS头10+MRC2（空指令体）
                 if (BinaryPrimitives.ReadInt32BigEndian(seg.AsSpan(0)) != 2) return; // 仅支持 FINS 帧发送
@@ -145,7 +145,7 @@ public sealed class OmronFinsSimulator : IAsyncDisposable
                 packet[0] = (byte)'F'; packet[1] = (byte)'I'; packet[2] = (byte)'N'; packet[3] = (byte)'S';
                 BinaryPrimitives.WriteInt32BigEndian(packet.AsSpan(4), respSeg.Length);
                 Array.Copy(respSeg, 0, packet, 8, respSeg.Length);
-                await stream.WriteAsync(packet, ct).ConfigureAwait(false);
+                await stream.WriteAsync(packet, ct);
             }
         }
         catch
@@ -159,7 +159,7 @@ public sealed class OmronFinsSimulator : IAsyncDisposable
         int read = 0;
         while (read < buffer.Length)
         {
-            int n = await stream.ReadAsync(buffer.AsMemory(read), ct).ConfigureAwait(false);
+            int n = await stream.ReadAsync(buffer.AsMemory(read), ct);
             if (n <= 0) return false;
             read += n;
         }
@@ -170,7 +170,7 @@ public sealed class OmronFinsSimulator : IAsyncDisposable
     {
         _cts.Cancel();
         _listener.Stop();
-        try { if (_acceptTask != null) await _acceptTask.ConfigureAwait(false); } catch { /* 忽略 */ }
+        try { if (_acceptTask != null) await _acceptTask; } catch { /* 忽略 */ }
         _cts.Dispose();
     }
 }

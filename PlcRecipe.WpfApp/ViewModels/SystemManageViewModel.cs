@@ -123,6 +123,9 @@ public partial class SystemManageViewModel(
     [ObservableProperty]
     private string _apiKey = "";
 
+    [ObservableProperty]
+    private string _apiKeyRoles = "";
+
     // ---- 登录页默认口令提示（产线部署建议关闭） ----
     [ObservableProperty]
     private bool _showDefaultCredentialHint;
@@ -157,7 +160,7 @@ public partial class SystemManageViewModel(
             VerifyAfterWrite = s.VerifyAfterWrite; PollIntervalMs = s.PollIntervalMs; LogKeepDays = s.LogKeepDays;
             DbProviderChoice = (s.DatabaseProvider ?? "sqlite").Equals("mysql", StringComparison.OrdinalIgnoreCase) ? "MySQL" : "SQLite";
             DbConnectionString = s.DatabaseConnectionString; BackupKeepCount = s.BackupKeepCount;
-            ApiKey = s.ApiKey; ShowDefaultCredentialHint = s.ShowDefaultCredentialHint;
+            ApiKey = s.ApiKey; ApiKeyRoles = s.ApiKeyRoles ?? ""; ShowDefaultCredentialHint = s.ShowDefaultCredentialHint;
         }
         catch (Exception ex) { Serilog.Log.Error(ex, "系统管理刷新失败"); dialogs.Error("刷新失败：" + ex.Message); }
         finally { _refreshGate.Release(); }
@@ -320,6 +323,7 @@ public partial class SystemManageViewModel(
             s.DatabaseConnectionString = DbConnectionString;
             s.BackupKeepCount = Math.Clamp(BackupKeepCount, 1, 100);
             s.ApiKey = ApiKey.Trim();
+            s.ApiKeyRoles = ApiKeyRoles.Trim();
             s.ShowDefaultCredentialHint = ShowDefaultCredentialHint;
             settings.Save();
             if (themeChanged)

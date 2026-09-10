@@ -235,7 +235,7 @@ public class TransferService(
                 // 配方标识（水印）：下载成功后把"配方名|v版本"写入设备配置的标识地址，供产线/MES 核对在用配方
                 if (!string.IsNullOrWhiteSpace(watermark) && !string.IsNullOrWhiteSpace(device.RecipeTagAddress))
                 {
-                    await WriteRecipeTagAsync(c, device, watermark, ct).ConfigureAwait(false);
+                    await WriteRecipeTagAsync(c, device, watermark, opCt).ConfigureAwait(false);
                     tagWritten = true;
                 }
             }, ct).ConfigureAwait(false);

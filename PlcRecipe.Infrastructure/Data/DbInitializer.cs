@@ -7,7 +7,7 @@ namespace PlcRecipe.Infrastructure.Data;
 
 /// <summary>
 /// 建库与初始数据（内置管理员账号）。
-/// SQLite：旧库缺列时增量迁移（ALTER TABLE ADD COLUMN）+ 新表补建，不破坏数据；
+/// SQLite：旧库缺列时增量迁移（ALTER TABLE ADD COLUMN），不破坏数据；
 /// MySQL：新库由 EnsureCreated 建完整结构。
 /// </summary>
 public static class DbInitializer
@@ -42,7 +42,6 @@ public static class DbInitializer
     {
         var created = await db.Database.EnsureCreatedAsync(ct).ConfigureAwait(false);
         await MigrateColumnsAsync(db, ct).ConfigureAwait(false);
-        await EnsureRecipeVersionHistoryTableAsync(db, ct).ConfigureAwait(false);
         await EnsureWalModeAsync(db, ct).ConfigureAwait(false);
 
         if (!await db.Users.AnyAsync(ct).ConfigureAwait(false))
@@ -118,44 +117,6 @@ public static class DbInitializer
                     Log.Warning(ex, "数据库迁移补列 {Table}.{Column} 疑似并发已存在，复查确认无需处理", table, column);
                 }
             }
-        }
-        finally
-        {
-            await db.Database.CloseConnectionAsync().ConfigureAwait(false);
-        }
-    }
-
-    /// <summary>旧 SQLite 库补建配方版本历史表（EnsureCreated 不会为已存在的库建新表）。</summary>
-    private static async Task EnsureRecipeVersionHistoryTableAsync(AppDbContext db, CancellationToken ct)
-    {
-        if (!db.Database.IsSqlite()) return;
-
-        var conn = db.Database.GetDbConnection();
-        await conn.OpenAsync(ct).ConfigureAwait(false);
-        try
-        {
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = """
-                CREATE TABLE IF NOT EXISTS "RecipeVersionHistory" (
-                    "Id" INTEGER NOT NULL CONSTRAINT "PK_RecipeVersionHistory" PRIMARY KEY AUTOINCREMENT,
-                    "RecipeId" INTEGER NOT NULL,
-                    "Version" INTEGER NOT NULL,
-                    "Name" TEXT NOT NULL,
-                    "SnapshotJson" TEXT NOT NULL,
-                    "SavedBy" TEXT NULL,
-                    "SavedAtUtc" TEXT NOT NULL,
-                    "ChangeNote" TEXT NULL
-                );
-                """;
-            await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
-            await using var idx = conn.CreateCommand();
-            idx.CommandText = "CREATE INDEX IF NOT EXISTS \"IX_RecipeVersionHistory_RecipeId_Version\" ON \"RecipeVersionHistory\" (\"RecipeId\", \"Version\");";
-            await idx.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            // 建表失败会让版本历史功能整体不可用，fail fast 比带残缺 schema 运行更好定位
-            throw new InvalidOperationException("数据库初始化失败：RecipeVersionHistory 表创建未成功", ex);
         }
         finally
         {

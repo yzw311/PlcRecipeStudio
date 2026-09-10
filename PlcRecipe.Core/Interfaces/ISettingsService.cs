@@ -33,6 +33,9 @@ public sealed class AppSettings
     public bool PfdocSeedDone { get; set; }
     /// <summary>API 宿主（PlcRecipe.Server）的访问密钥；非空时 /api/* 请求必须携带 X-Api-Key 头。留空 = API 关闭（安全默认）</summary>
     public string ApiKey { get; set; } = "";
+    /// <summary>API 多密钥分权：格式 "reader:key1;engineer:key2;admin:key3"（reader=操作员、engineer=工程师）。
+    /// 命中映射密钥的请求按对应角色放行，未知角色整条忽略；留空 = 仅 ApiKey 生效（Admin）。SignalR 推送仅支持主 ApiKey。</summary>
+    public string ApiKeyRoles { get; set; } = "";
     /// <summary>登录页是否显示默认账号口令提示（产线部署建议关闭）</summary>
     public bool ShowDefaultCredentialHint { get; set; } = false;
 }

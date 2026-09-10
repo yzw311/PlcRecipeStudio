@@ -16,6 +16,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- 生成 XML 文档供 NuGet 包使用；不强制 100% 成员文档覆盖率（CS1591） -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <ItemGroup>

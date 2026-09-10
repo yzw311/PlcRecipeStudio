@@ -17,6 +17,7 @@ using PlcRecipe.Server.Health;
 /// 数据目录：环境变量 PLCRECIPE_DATA 覆盖（默认与 WPF 相同的 %LOCALAPPDATA%\PlcRecipeStudio）
 /// 鉴权：设置文件 ApiKey 非空时，/api/* 必须携带 X-Api-Key 头（/health 与 /hubs 不校验）。
 /// 安全默认：ApiKey 为空时 /api/* 一律 503 拒绝（否则服务层权限守卫形同虚设，等于把 PLC 写权限暴露给局域网）；
+/// 多密钥分权：ApiKeyRoles = "reader:key1;engineer:key2;admin:key3"，主 ApiKey 恒为 Admin；
 /// /hubs/plc 连接需携带 ?key=<ApiKey>。
 /// 注意：SQLite 模式下请勿与本机 WPF 同时运行（单写者）；多工作站并发请切换 SQL Server。
 ///
@@ -64,14 +65,13 @@ app.Use(async (context, next) =>
 {
     if (!context.Request.Path.StartsWithSegments("/api") && !context.Request.Path.StartsWithSegments("/hubs")) { await next(); return; }
     var settings = context.RequestServices.GetRequiredService<ISettingsService>().Settings;
-    var configured = settings.ApiKey;
     var provided = context.Request.Headers["X-Api-Key"].FirstOrDefault() ?? context.Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
-    if (string.IsNullOrWhiteSpace(configured)) { await ApiProblem(context, 503, "api_disabled", "API 未启用"); return; }
-    if (!ApiKeyGuard.Equals(provided ?? "", configured)) { await ApiProblem(context, 401, "unauthorized", "未授权"); return; }
-    // Optional role mapping: ApiKeyRoles = "reader:key1;engineer:key2;admin:key3". Legacy ApiKey is admin.
+    if (string.IsNullOrWhiteSpace(settings.ApiKey)) { await ApiProblem(context, 503, "api_disabled", "API 未启用"); return; }
+    // 主 ApiKey = Admin（兼容旧配置）；ApiKeyRoles 追加 "reader:key;engineer:key;admin:key" 分权映射
     var role = UserRole.Admin;
-    var roles = settings.GetType().GetProperty("ApiKeyRoles")?.GetValue(settings)?.ToString();
-    if (!string.IsNullOrWhiteSpace(roles)) { role = roles.Split(';').Select(x => x.Split(':', 2)).Where(x => x.Length == 2 && ApiKeyGuard.Equals(provided!, x[1])).Select(x => x[0].ToLowerInvariant()).Select(x => x switch { "reader" => UserRole.Operator, "engineer" => UserRole.Engineer, _ => UserRole.Admin }).FirstOrDefault(UserRole.Admin); }
+    if (!ApiKeyGuard.Equals(provided ?? "", settings.ApiKey) &&
+        !ApiKeyGuard.TryMapRole(settings.ApiKeyRoles, provided ?? "", out role))
+    { await ApiProblem(context, 401, "unauthorized", "未授权"); return; }
     context.Items["ApiRole"] = role;
     context.RequestServices.GetRequiredService<ICurrentUserService>().Set(new User { Id = 0, UserName = "api-service", Role = role });
     await next();
@@ -182,6 +182,8 @@ app.MapPost("/api/recipes/{id:int}/rollback", async (int id, RollbackRequest req
         if (recipeBefore.Version != req.ExpectedVersion)
             return Results.Conflict(new { error = "配方版本已变化，请刷新后重试", code = "recipe_version_conflict" });
         var snapshot = await svc.GetVersionSnapshotAsync(id, req.Version);
+        // 快照行挂上回滚前的基准版本，让 SaveRecipeAsync 的乐观锁在落盘前复核（缩小检查与保存之间的竞态窗口）
+        if (snapshot.Count > 0) snapshot[0].Recipe = recipeBefore;
         await svc.SaveRecipeAsync(id, snapshot, "api-service", $"回滚自 v{req.Version}", ct);
         var recipeAfter = await svc.GetRecipeAsync(id);
         return Results.Ok(new { rolledBack = true, version = recipeAfter.Version });
@@ -245,16 +247,37 @@ app.MapHub<PlcStateHub>("/hubs/plc");
 var connections = app.Services.GetRequiredService<IPlcConnectionManager>();
 var hubContext = app.Services.GetRequiredService<IHubContext<PlcStateHub>>();
 var broadcastGate = new SemaphoreSlim(1, 1);
+object? pendingBroadcast = null;
+var pendingBroadcastLock = new object();
 connections.StateChanged += (_, e) =>
 {
-    // fire-and-forget 但必须观察异常：SignalR 关闭/断连瞬间的发送失败不应成为未观察异常
+    // fire-and-forget 但必须观察异常；状态风暴时合并为"最新值"补发而非整条丢弃
     _ = BroadcastAsync(e);
 };
 
 async Task BroadcastAsync(object e)
 {
+    lock (pendingBroadcastLock) { pendingBroadcast = e; }
     if (!await broadcastGate.WaitAsync(0)) return;
-    try { await hubContext.Clients.All.SendAsync("deviceStateChanged", e); } catch (Exception ex) { Serilog.Log.Debug(ex, "SignalR 设备状态广播失败"); } finally { broadcastGate.Release(); }
+    try
+    {
+        while (true)
+        {
+            object? toSend;
+            lock (pendingBroadcastLock) { toSend = pendingBroadcast; pendingBroadcast = null; }
+            if (toSend == null) break;
+            try { await hubContext.Clients.All.SendAsync("deviceStateChanged", toSend); }
+            catch (Exception ex) { Serilog.Log.Debug(ex, "SignalR 设备状态广播失败"); }
+        }
+    }
+    finally
+    {
+        broadcastGate.Release();
+        // 释放后复查：最后一次取值与释放之间新到的事件已错过闸门，由本调用者触发补发
+        object? late;
+        lock (pendingBroadcastLock) { late = pendingBroadcast; pendingBroadcast = null; }
+        if (late != null) _ = BroadcastAsync(late);
+    }
 }
 
 app.Run();
@@ -275,6 +298,30 @@ public static class ApiKeyGuard
         var a = System.Text.Encoding.UTF8.GetBytes(provided ?? "");
         var b = System.Text.Encoding.UTF8.GetBytes(expected ?? "");
         return System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(a, b);
+    }
+
+    /// <summary>
+    /// 多密钥分权映射：rolesConfig 格式 "reader:key1;engineer:key2;admin:key3"。
+    /// providedKey 命中某条映射时返回 true 并带出对应角色；未知角色/格式残缺的条目整条忽略（fail closed）。
+    /// 主 ApiKey 不在此解析——调用方先按主密钥比对，命中即 Admin。
+    /// </summary>
+    public static bool TryMapRole(string? rolesConfig, string providedKey, out UserRole role)
+    {
+        role = UserRole.Operator;
+        if (string.IsNullOrWhiteSpace(rolesConfig)) return false;
+        foreach (var entry in rolesConfig.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var sep = entry.IndexOf(':');
+            if (sep <= 0 || sep == entry.Length - 1) continue;
+            if (!Equals(providedKey, entry[(sep + 1)..].Trim())) continue;
+            switch (entry[..sep].Trim().ToLowerInvariant())
+            {
+                case "reader": role = UserRole.Operator; return true;
+                case "engineer": role = UserRole.Engineer; return true;
+                case "admin": role = UserRole.Admin; return true;
+            }
+        }
+        return false;
     }
 }
 

@@ -31,7 +31,7 @@ public sealed class ModbusTcpSimulator : IAsyncDisposable
     {
         while (!ct.IsCancellationRequested)
         {
-            var client = await _listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+            var client = await _listener.AcceptTcpClientAsync(ct);
             _ = HandleClientAsync(client, ct);
         }
     }
@@ -45,17 +45,17 @@ public sealed class ModbusTcpSimulator : IAsyncDisposable
         {
             while (!ct.IsCancellationRequested)
             {
-                if (!await ReadExactAsync(stream, header, ct).ConfigureAwait(false)) return;
+                if (!await ReadExactAsync(stream, header, ct)) return;
                 int length = BinaryPrimitives.ReadUInt16BigEndian(header.AsSpan(4));
                 var pdu = new byte[length - 1];
-                if (!await ReadExactAsync(stream, pdu, ct).ConfigureAwait(false)) return;
+                if (!await ReadExactAsync(stream, pdu, ct)) return;
                 byte unitId = header[6];
                 var resp = HandlePdu(pdu);
                 var adu = new byte[7 + resp.Length];
                 Array.Copy(header, adu, 7);
                 BinaryPrimitives.WriteUInt16BigEndian(adu.AsSpan(4), (ushort)(resp.Length + 1));
                 Array.Copy(resp, 0, adu, 7, resp.Length);
-                await stream.WriteAsync(adu, ct).ConfigureAwait(false);
+                await stream.WriteAsync(adu, ct);
             }
         }
         catch
@@ -69,7 +69,7 @@ public sealed class ModbusTcpSimulator : IAsyncDisposable
         int read = 0;
         while (read < buffer.Length)
         {
-            int n = await stream.ReadAsync(buffer.AsMemory(read), ct).ConfigureAwait(false);
+            int n = await stream.ReadAsync(buffer.AsMemory(read), ct);
             if (n <= 0) return false;
             read += n;
         }
@@ -158,7 +158,7 @@ public sealed class ModbusTcpSimulator : IAsyncDisposable
     {
         _cts.Cancel();
         _listener.Stop();
-        try { if (_acceptTask != null) await _acceptTask.ConfigureAwait(false); } catch { /* 忽略 */ }
+        try { if (_acceptTask != null) await _acceptTask; } catch { /* 忽略 */ }
         _cts.Dispose();
     }
 }

@@ -54,7 +54,19 @@ public sealed class RecipeFileStore(string dataDirectory, ILogger<RecipeFileStor
     public async Task CommitAsync(string deviceName, string recipeName, int expectedVersion, int version, IReadOnlyList<RecipeItem> rows, string? savedBy = null, string? changeNote = null)
     {
         var gate = LockFor(deviceName, recipeName); await gate.WaitAsync().ConfigureAwait(false);
-        try { var current = await TryLoadAsync(deviceName, recipeName).ConfigureAwait(false); if ((current?.Version ?? 0) != expectedVersion) throw new InvalidOperationException("版本冲突"); await SaveHistoryAsync(deviceName, recipeName, version, rows, savedBy, changeNote); await SaveUnlockedAsync(deviceName, recipeName, version, rows); }
+        try
+        {
+            var current = await TryLoadAsync(deviceName, recipeName).ConfigureAwait(false);
+            if ((current?.Version ?? 0) != expectedVersion) throw new InvalidOperationException("版本冲突");
+            await SaveHistoryAsync(deviceName, recipeName, version, rows, savedBy, changeNote).ConfigureAwait(false);
+            try { await SaveUnlockedAsync(deviceName, recipeName, version, rows).ConfigureAwait(false); }
+            catch
+            {
+                // 主文件写失败时回删刚写的快照：历史里不能留下从未生效的孤儿版本
+                try { File.Delete(Path.Combine(HistoryDirOf(deviceName, recipeName), $"v{version}.txt")); } catch { }
+                throw;
+            }
+        }
         finally { gate.Release(); }
     }
 
@@ -197,7 +209,6 @@ public sealed class RecipeFileStore(string dataDirectory, ILogger<RecipeFileStor
                 DateTime.TryParse(savedAt, null, System.Globalization.DateTimeStyles.RoundtripKind, out var at);
                 result.Add(new RecipeVersionHistory
                 {
-                    Id = doc.Version,
                     Version = doc.Version,
                     Name = doc.Name,
                     SavedBy = savedBy,
@@ -285,7 +296,10 @@ public sealed class RecipeFileStore(string dataDirectory, ILogger<RecipeFileStor
     {
         foreach (var r in rows)
         {
-            sb.Append(Escape(r.Name)).Append('|')
+            // 名称是行首字段：# 开头会被解析器当注释跳过，前置转义符保住该行（SplitEscaped 会还原）
+            var name = Escape(r.Name);
+            if (name.StartsWith('#')) name = "\\" + name;
+            sb.Append(name).Append('|')
               .Append(Escape(r.Address)).Append('|')
               .Append(r.DataType).Append('|')
               .Append(r.StringWords).Append('|')
@@ -301,7 +315,7 @@ public sealed class RecipeFileStore(string dataDirectory, ILogger<RecipeFileStor
     private static string[] SplitEscaped(string line)
     {
         var parts = new List<string>(); var sb = new StringBuilder(); var escaped = false;
-        foreach (var c in line) { if (escaped) { sb.Append(c switch { 'n' => '\r', 'r' => '\n', _ => c }); escaped = false; } else if (c == '\\') escaped = true; else if (c == '|') { parts.Add(sb.ToString()); sb.Clear(); } else sb.Append(c); }
+        foreach (var c in line) { if (escaped) { sb.Append(c switch { 'n' => '\n', 'r' => '\r', _ => c }); escaped = false; } else if (c == '\\') escaped = true; else if (c == '|') { parts.Add(sb.ToString()); sb.Clear(); } else sb.Append(c); }
         if (escaped) sb.Append('\\'); parts.Add(sb.ToString()); return parts.ToArray();
     }
 
