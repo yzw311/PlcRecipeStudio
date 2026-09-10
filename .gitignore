@@ -19,3 +19,6 @@ settings.*.json
 # IDE and OS files
 .DS_Store
 Thumbs.db
+
+# Local publishing secret
+api.txt
