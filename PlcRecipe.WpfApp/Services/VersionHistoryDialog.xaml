@@ -1,0 +1,86 @@
+<Window x:Class="PlcRecipe.WpfApp.Services.VersionHistoryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="配方版本历史"
+        Width="880" Height="600" MinWidth="700" MinHeight="450" MaxWidth="1600" MaxHeight="1000"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Brush.Content.Bg}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="HeaderText" FontSize="14" FontWeight="Bold" Margin="0,0,0,8"
+                   Foreground="{DynamicResource Brush.Text.Primary}"/>
+
+        <!-- 版本列表 -->
+        <DataGrid Grid.Row="1" x:Name="VersionsGrid" AutoGenerateColumns="False" AlternationCount="2"
+                  CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column"
+                  IsReadOnly="True" SelectionMode="Single" RowHeight="30"
+                  Background="Transparent" BorderThickness="0"
+                  Foreground="{DynamicResource Brush.Text.Primary}"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource Brush.Divider}"
+                  SelectionChanged="Versions_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="版本" Binding="{Binding Version}" Width="70"/>
+                <DataGridTextColumn Header="保存时间" Binding="{Binding SavedAtText}" Width="150"/>
+                <DataGridTextColumn Header="操作人" Binding="{Binding SavedBy}" Width="110"/>
+                <DataGridTextColumn Header="变更说明" Binding="{Binding ChangeNote}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="2" x:Name="DiffHeader" Margin="0,10,0,6" FontSize="12" FontWeight="Bold"
+                   Foreground="{DynamicResource Brush.Text.Secondary}"
+                   Text="与当前版本的差异（选中版本后显示）"/>
+
+        <!-- 差异明细 -->
+        <Border Grid.Row="3" Style="{DynamicResource CardBorder}" Padding="8">
+            <DataGrid x:Name="DiffGrid" AutoGenerateColumns="False" AlternationCount="2"
+                      CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column"
+                      IsReadOnly="True" RowHeight="28"
+                      Background="Transparent" BorderThickness="0"
+                      Foreground="{DynamicResource Brush.Text.Primary}"
+                      GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource Brush.Divider}">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding State}" Value="已修改">
+                                <Setter Property="Background" Value="{DynamicResource Brush.Warning.Light}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding State}" Value="该版本新增">
+                                <Setter Property="Background" Value="{DynamicResource Brush.Primary.Light}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding State}" Value="当前版本独有">
+                                <Setter Property="Background" Value="{DynamicResource Brush.Danger.Light}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="状态" Binding="{Binding State}" Width="110"/>
+                    <DataGridTextColumn Header="变量名" Binding="{Binding Name}" Width="140"/>
+                    <DataGridTextColumn Header="PLC 地址" Binding="{Binding Address}" Width="120"/>
+                    <DataGridTextColumn Header="类型" Binding="{Binding DataType}" Width="70"/>
+                    <DataGridTextColumn Header="历史值" Binding="{Binding HistoryValue}" Width="*"/>
+                    <DataGridTextColumn Header="当前值" Binding="{Binding CurrentValue}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="RollbackButton" Content="回滚此版本" Width="110" Height="32" Margin="0,0,8,0"
+                    Click="Rollback_Click" Visibility="Collapsed"
+                    Background="{DynamicResource Brush.Primary}" Foreground="White" BorderThickness="0"/>
+            <Button Content="关闭" Width="90" Height="32" Click="Close_Click"
+                    Background="{DynamicResource Brush.Secondary.Bg}"
+                    Foreground="{DynamicResource Brush.Text.Primary}" BorderBrush="{DynamicResource Brush.Border}"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,199 @@
+<UserControl x:Class="PlcRecipe.WpfApp.Views.Pages.SystemManagePage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <TabControl Background="Transparent" BorderThickness="0">
+        <!-- ===== 用户管理 ===== -->
+        <TabItem Header="用户管理">
+            <Border Style="{DynamicResource CardBorder}" Margin="0,14,0,0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="＋ 新增用户" Command="{Binding AddUserCommand}" Height="32" Padding="12,0" Margin="0,0,8,0"
+                                Background="{DynamicResource Brush.Primary}" Foreground="{DynamicResource Brush.Text.OnAccent}" BorderThickness="0"/>
+                        <Button Content="重置密码" Command="{Binding ResetPasswordCommand}" CommandParameter="{Binding SelectedItem, ElementName=UsersGrid}"
+                                Height="32" Padding="12,0" Margin="0,0,8,0"
+                                Background="{DynamicResource Brush.Secondary.Bg}"
+                                Foreground="{DynamicResource Brush.Text.Primary}" BorderBrush="{DynamicResource Brush.Border}"/>
+                        <Button Content="启用/禁用" Command="{Binding ToggleEnabledCommand}" CommandParameter="{Binding SelectedItem, ElementName=UsersGrid}"
+                                Height="32" Padding="12,0" Margin="0,0,8,0"
+                                Background="{DynamicResource Brush.Secondary.Bg}"
+                                Foreground="{DynamicResource Brush.Text.Primary}" BorderBrush="{DynamicResource Brush.Border}"/>
+                        <Button Content="改角色" Command="{Binding ChangeRoleCommand}" CommandParameter="{Binding SelectedItem, ElementName=UsersGrid}"
+                                Height="32" Padding="12,0" Margin="0,0,8,0"
+                                Background="{DynamicResource Brush.Secondary.Bg}"
+                                Foreground="{DynamicResource Brush.Text.Primary}" BorderBrush="{DynamicResource Brush.Border}"/>
+                        <Button Content="删除" Command="{Binding DeleteUserCommand}" CommandParameter="{Binding SelectedItem, ElementName=UsersGrid}"
+                                Height="32" Padding="12,0"
+                                Background="{DynamicResource Brush.Danger.Light}" Foreground="{DynamicResource Brush.Danger}" BorderThickness="0"/>
+                    </StackPanel>
+                    <!-- 依主题约定：不设 RowBackground/AlternatingRowBackground（会压过主题行样式的触发器），
+                         隔行色由 Shared.xaml 的 DataGridRow 隐式样式 + AlternationCount 提供 -->
+                    <DataGrid x:Name="UsersGrid" ItemsSource="{Binding Users}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column"
+                              IsReadOnly="True" SelectionMode="Single" AlternationCount="2"
+                              Background="Transparent" BorderThickness="0"
+                              Foreground="{DynamicResource Brush.Text.Primary}"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource Brush.Divider}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding User.Id}" Width="50"/>
+                            <DataGridTextColumn Header="用户名" Binding="{Binding User.UserName}" Width="140"/>
+                            <DataGridTextColumn Header="角色" Binding="{Binding RoleText}" Width="100"/>
+                            <DataGridTextColumn Header="状态" Binding="{Binding EnabledText}" Width="80"/>
+                            <DataGridTextColumn Header="备注" Binding="{Binding User.Remark}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </TabItem>
+
+        <!-- ===== 操作日志 ===== -->
+        <TabItem Header="操作日志">
+            <Border Style="{DynamicResource CardBorder}" Margin="0,14,0,0">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,10" ItemHeight="36">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="从" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                            <DatePicker SelectedDate="{Binding LogFrom}" Width="130" Margin="6,0" Height="30"/>
+                            <TextBlock Text="至" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                            <DatePicker SelectedDate="{Binding LogTo}" Width="130" Margin="6,0" Height="30"/>
+                            <TextBlock Text="用户" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                            <TextBox Text="{Binding LogUserFilter, UpdateSourceTrigger=PropertyChanged}" Width="110" Height="30" Margin="6,0" VerticalContentAlignment="Center"/>
+                            <Button Content="查询" Command="{Binding QueryLogsCommand}" Height="30" Padding="12,0"
+                                    Background="{DynamicResource Brush.Primary}" Foreground="{DynamicResource Brush.Text.OnAccent}" BorderThickness="0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="◀ 上一页" Command="{Binding PrevPageCommand}" Height="30" Padding="10,0" Margin="0,0,6,0"
+                                    Background="{DynamicResource Brush.Secondary.Bg}"
+                                    Foreground="{DynamicResource Brush.Text.Primary}" BorderBrush="{DynamicResource Brush.Border}"/>
+                            <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}">
+                                <Run Text="{Binding LogPage, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding LogTotalPages, Mode=OneWay}"/>
+                                <Run Text="（共"/><Run Text="{Binding LogTotalCount, Mode=OneWay}"/><Run Text="条）"/>
+                            </TextBlock>
+                            <Button Content="下一页 ▶" Command="{Binding NextPageCommand}" Height="30" Padding="10,0" Margin="6,0,6,0"
+                                    Background="{DynamicResource Brush.Secondary.Bg}"
+                                    Foreground="{DynamicResource Brush.Text.Primary}" BorderBrush="{DynamicResource Brush.Border}"/>
+                            <Button Content="清理旧日志" Command="{Binding CleanupLogsCommand}" Height="30" Padding="10,0"
+                                    Background="{DynamicResource Brush.Danger.Light}" Foreground="{DynamicResource Brush.Danger}" BorderThickness="0"/>
+                        </StackPanel>
+                    </WrapPanel>
+                    <!-- 失败日志行红色高亮依赖主题行样式触发器：不得在此设置行背景 -->
+                    <DataGrid ItemsSource="{Binding Logs}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column"
+                              IsReadOnly="True" AlternationCount="2"
+                              Background="Transparent" BorderThickness="0"
+                              Foreground="{DynamicResource Brush.Text.Primary}"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource Brush.Divider}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="时间" Binding="{Binding TimeText}" Width="150"/>
+                            <DataGridTextColumn Header="操作人" Binding="{Binding Log.UserName}" Width="90"/>
+                            <DataGridTextColumn Header="来源" Binding="{Binding SourceText}" Width="80"/>
+                            <DataGridTextColumn Header="动作" Binding="{Binding Log.Action}" Width="110"/>
+                            <DataGridTextColumn Header="目标" Binding="{Binding Log.Target}" Width="220"/>
+                            <DataGridTextColumn Header="详情" Binding="{Binding Log.Detail}" Width="*"/>
+                            <DataGridTextColumn Header="结果" Binding="{Binding ResultText}" Width="60"/>
+                            <DataGridTextColumn Header="耗时ms" Binding="{Binding Log.DurationMs}" Width="70"/>
+                        </DataGrid.Columns>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Log.Success}" Value="False">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.Danger.Light}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+        </TabItem>
+
+        <!-- ===== 软件设置 ===== -->
+        <TabItem Header="软件设置">
+            <Border Style="{DynamicResource CardBorder}" Margin="0,14,0,0" MaxWidth="640" HorizontalAlignment="Left">
+                <StackPanel>
+                    <TextBlock Text="软件设置" FontSize="16" FontWeight="Bold" Margin="0,0,0,16"
+                               Foreground="{DynamicResource Brush.Text.Primary}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="启动需要登录" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding RequireLogin}" VerticalAlignment="Center"
+                                  Content="开启后启动显示登录窗口；关闭则自动以管理员进入"/>
+
+                        <TextBlock Grid.Row="1" Text="主题" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <ComboBox Grid.Row="1" Grid.Column="1" SelectedItem="{Binding ThemeChoice}" Height="30" Width="140" HorizontalAlignment="Left">
+                            <sys:String>亮色</sys:String>
+                            <sys:String>暗色</sys:String>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="2" Text="批量并行 PLC 数" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding MaxParallelDevices}" Height="30" Width="140" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="3" Text="操作超时(ms)" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding OperationTimeoutMs}" Height="30" Width="140" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="4" Text="下载前强制对比" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <CheckBox Grid.Row="4" Grid.Column="1" IsChecked="{Binding ForceCompareOnDownload}" VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Row="5" Text="下载后回读校验" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <CheckBox Grid.Row="5" Grid.Column="1" IsChecked="{Binding VerifyAfterWrite}" VerticalAlignment="Center"/>
+
+                        <TextBlock Grid.Row="6" Text="默认信号轮询间隔(ms)" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding PollIntervalMs}" Height="30" Width="140" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="7" Text="日志保留(天)" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding LogKeepDays}" Height="30" Width="140" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="8" Text="数据库引擎" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                   ToolTip="SQLite=本地单机（默认，零配置）；MySQL=MES 中央库（多工作站共享）。切换后重启生效"/>
+                        <ComboBox Grid.Row="8" Grid.Column="1" SelectedItem="{Binding DbProviderChoice}" Height="30" Width="140" HorizontalAlignment="Left">
+                            <sys:String>SQLite</sys:String>
+                            <sys:String>MySQL</sys:String>
+                        </ComboBox>
+
+                        <TextBlock Grid.Row="9" Text="MySQL 连接串" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                   ToolTip="引擎为 MySQL 时必填，例如：Server=localhost;Database=plc_recipe;Uid=root;Pwd=xxx"/>
+                        <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding DbConnectionString, UpdateSourceTrigger=PropertyChanged}" Height="30"
+                                 VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="10" Text="备份保留份数" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                   ToolTip="SQLite 数据库每日自动备份到数据目录 backup/ 子目录，超出份数自动清理"/>
+                        <TextBox Grid.Row="10" Grid.Column="1" Text="{Binding BackupKeepCount}" Height="30" Width="140" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="11" Text="API 访问密钥" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                   ToolTip="PlcRecipe.Server 的 X-Api-Key 鉴权密钥。留空 = API 一律拒绝（安全默认）；配置后重启服务端生效"/>
+                        <TextBox Grid.Row="11" Grid.Column="1" Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" Height="30"
+                                 VerticalContentAlignment="Center"/>
+
+                        <TextBlock Grid.Row="12" Text="登录页默认口令提示" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                                   ToolTip="是否在登录页显示首次安装配置提示；产线部署建议关闭"/>
+                        <CheckBox Grid.Row="12" Grid.Column="1" IsChecked="{Binding ShowDefaultCredentialHint}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Button Content="保存设置" Command="{Binding SaveSettingsCommand}" Height="36" Width="120" Margin="0,16,0,0"
+                            HorizontalAlignment="Left"
+                            Background="{DynamicResource Brush.Primary}" Foreground="White" BorderThickness="0"/>
+                </StackPanel>
+            </Border>
+        </TabItem>
+        </TabControl>
+            </ScrollViewer>
+</UserControl>

@@ -1,0 +1,54 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============ 暗色主题（车间大屏友好，仅画刷；共享样式见 Themes/Shared.xaml）============ -->
+
+    <SolidColorBrush x:Key="Brush.Content.Bg" Color="#111827"/>
+    <SolidColorBrush x:Key="Brush.Card.Bg" Color="#1F2937"/>
+    <SolidColorBrush x:Key="Brush.Secondary.Bg" Color="#273449"/>
+    <SolidColorBrush x:Key="Brush.Sidebar.Bg" Color="#0B1220"/>
+    <SolidColorBrush x:Key="Brush.Sidebar.Hover" Color="#1E293B"/>
+    <SolidColorBrush x:Key="Brush.Sidebar.Active" Color="#16233B"/>
+    <SolidColorBrush x:Key="Brush.Sidebar.Text" Color="#E5E7EB"/>
+
+    <SolidColorBrush x:Key="Brush.Text.Primary" Color="#F3F4F6"/>
+    <SolidColorBrush x:Key="Brush.Text.Secondary" Color="#9CA3AF"/>
+
+    <SolidColorBrush x:Key="Brush.Border" Color="#374151"/>
+    <SolidColorBrush x:Key="Brush.Divider" Color="#2C3849"/>
+
+    <SolidColorBrush x:Key="Brush.Success" Color="#22C55E"/>
+    <SolidColorBrush x:Key="Brush.Danger" Color="#EF4444"/>
+    <SolidColorBrush x:Key="Brush.Warning" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="Brush.Offline" Color="#6B7280"/>
+    <SolidColorBrush x:Key="Brush.Success.Light" Color="#143625"/>
+    <SolidColorBrush x:Key="Brush.Danger.Light" Color="#3B1A1A"/>
+    <SolidColorBrush x:Key="Brush.Warning.Light" Color="#3B2E10"/>
+
+    <SolidColorBrush x:Key="Brush.Primary" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="Brush.Primary.Light" Color="#152A4A"/>
+
+    <SolidColorBrush x:Key="Brush.Selection" Color="#1D3A6B"/>
+    <SolidColorBrush x:Key="Brush.Text.OnAccent" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Text.Muted" Color="#6B7280"/>
+    <SolidColorBrush x:Key="Brush.Surface.Subtle" Color="#172033"/>
+    <SolidColorBrush x:Key="Brush.Focus" Color="#60A5FA"/>
+    <SolidColorBrush x:Key="Brush.Primary.Hover" Color="#60A5FA"/>
+    <SolidColorBrush x:Key="Brush.Primary.Pressed" Color="#2563EB"/>
+    <SolidColorBrush x:Key="Brush.Disabled.Bg" Color="#374151"/>
+    <SolidColorBrush x:Key="Brush.Disabled.Text" Color="#6B7280"/>
+
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="DarkPrimaryBrush" Color="#2563EB"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="InfoBrush" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F3F4F6"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#374151"/>
+    <SolidColorBrush x:Key="SecondaryRegionBrush" Color="#273449"/>
+    <SolidColorBrush x:Key="ThirdlyRegionBrush" Color="#111827"/>
+    <SolidColorBrush x:Key="RegionBrush" Color="#1F2937"/>
+
+</ResourceDictionary>

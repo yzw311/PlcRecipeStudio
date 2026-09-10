@@ -1,0 +1,185 @@
+<Window x:Class="PlcRecipe.WpfApp.Services.DeviceEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="设备"
+        Width="820" MinWidth="620" MinHeight="520" MaxHeight="900" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize" ShowInTaskbar="False"
+        WindowStyle="ToolWindow"
+        Background="{DynamicResource Brush.Content.Bg}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel Margin="28,20">
+        <TextBlock Text="{Binding TitleText}" FontSize="19" FontWeight="Bold" Margin="0,0,0,14"
+                   Foreground="{DynamicResource Brush.Text.Primary}"/>
+
+        <!-- 连接参数 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="170"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="26"/>
+                <ColumnDefinition Width="170"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="设备名 *" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <TextBox Grid.Column="1" x:Name="NameBox" Height="34" VerticalContentAlignment="Center"
+                     Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Grid.Column="3" Text="品牌 / 协议" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <ComboBox Grid.Column="4" Height="30"
+                      ItemsSource="{Binding BrandOptions}" DisplayMemberPath="Value" SelectedValuePath="Key"
+                      SelectedValue="{Binding Brand}"/>
+
+            <TextBlock Grid.Row="1" Text="IP 地址" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Height="34" VerticalContentAlignment="Center"
+                     Text="{Binding Ip, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Grid.Row="1" Grid.Column="3" Text="端口" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <TextBox Grid.Row="1" Grid.Column="4" Height="34" VerticalContentAlignment="Center"
+                     Text="{Binding PortText, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Grid.Row="2" Text="Modbus 从站号" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Height="34" VerticalContentAlignment="Center"
+                     IsEnabled="{Binding IsModbus}"
+                     Text="{Binding SlaveText, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Grid.Row="2" Grid.Column="3" Text="32位字节序" VerticalAlignment="Center"
+                       Visibility="{Binding IsModbus, Converter={StaticResource BoolToVis}}"
+                       Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <ComboBox Grid.Row="2" Grid.Column="4" Height="30"
+                      Visibility="{Binding IsModbus, Converter={StaticResource BoolToVis}}"
+                      ItemsSource="{Binding DataFormatOptions}" DisplayMemberPath="Value" SelectedValuePath="Key"
+                      SelectedValue="{Binding DataFormat}"/>
+
+            <TextBlock Grid.Row="3" Text="串口(仅RTU)" VerticalAlignment="Center"
+                       Visibility="{Binding IsRtu, Converter={StaticResource BoolToVis}}"
+                       Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal"
+                        Visibility="{Binding IsRtu, Converter={StaticResource BoolToVis}}">
+                <TextBox x:Name="SerialBox" Width="80" Height="34" VerticalContentAlignment="Center"
+                         Text="{Binding SerialPortName, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Text="波特率" Margin="10,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <TextBox Width="70" Height="34" VerticalContentAlignment="Center"
+                         Text="{Binding BaudText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Text="校验" Margin="10,0,4,0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <ComboBox Width="70" Height="30"
+                          ItemsSource="{Binding ParityOptions}" SelectedItem="{Binding Parity}"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="4" Text="机架/槽号" VerticalAlignment="Center"
+                       Visibility="{Binding IsS7, Converter={StaticResource BoolToVis}}"
+                       Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal"
+                        Visibility="{Binding IsS7, Converter={StaticResource BoolToVis}}">
+                <TextBox Width="50" Height="34" VerticalContentAlignment="Center"
+                         Text="{Binding RackText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Text="/" Margin="4,0" VerticalAlignment="Center"/>
+                <TextBox Width="50" Height="34" VerticalContentAlignment="Center"
+                         Text="{Binding SlotText, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="5" Text="CPU 型号" VerticalAlignment="Center"
+                       Visibility="{Binding IsS7, Converter={StaticResource BoolToVis}}"
+                       Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <ComboBox Grid.Row="5" Grid.Column="1" Height="30" Width="180" HorizontalAlignment="Left"
+                      Visibility="{Binding IsS7, Converter={StaticResource BoolToVis}}"
+                      ItemsSource="{Binding CpuTypeOptions}" DisplayMemberPath="Value" SelectedValuePath="Key"
+                      SelectedValue="{Binding CpuType}"/>
+
+            <TextBlock Grid.Row="6" Text="启用" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <CheckBox Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding Enabled}"/>
+            <TextBlock Grid.Row="6" Grid.Column="3" Text="备注" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            <TextBox Grid.Row="6" Grid.Column="4" Height="34" VerticalContentAlignment="Center"
+                     Text="{Binding Remark, UpdateSourceTrigger=PropertyChanged}"/>
+        </Grid>
+
+        <!-- 信号联动 -->
+        <Expander Header="信号联动（PLC 置位请求位自动上传/下载）" Margin="0,12,0,0"
+                  IsExpanded="{Binding SignalExpanderExpanded, Mode=TwoWay}">
+            <Grid Margin="0,6,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <RowDefinition Height="40"/>
+                    <!-- 匹配规则为多行说明，必须独占自适应高度，不能与下一行水印设置重叠 -->
+                    <RowDefinition Height="Auto" MinHeight="40"/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+
+                <CheckBox Content="启用信号联动" VerticalAlignment="Center" IsChecked="{Binding SignalEnabled}"/>
+                <TextBlock Grid.Column="3" Text="轮询间隔(ms)" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <TextBox Grid.Column="4" Height="32" VerticalContentAlignment="Center"
+                         Text="{Binding PollText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Row="1" Text="下载请求位" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Height="32" VerticalContentAlignment="Center"
+                         Text="{Binding DlReqText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="上传请求位" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <TextBox Grid.Row="1" Grid.Column="4" Height="32" VerticalContentAlignment="Center"
+                         Text="{Binding UlReqText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Row="2" Text="配方名地址" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                           ToolTip="PLC 把配方名/条码（UTF-8 字符）写到该字地址区，软件按名字字符匹配配方"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Height="32" VerticalContentAlignment="Center"
+                         Text="{Binding RecipeNameAddressText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="名字字数" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                           ToolTip="名字区占用的字数（每字 2 字节）。按最长的名字/条码填写，短名字自动按 0 截断不影响匹配。每字 2 字节：数字/ASCII 条码 1 字节/字符，汉字 UTF-8 3 字节/字符"/>
+                <StackPanel Grid.Row="2" Grid.Column="4" Orientation="Horizontal">
+                    <TextBox Width="70" Height="32" VerticalContentAlignment="Center"
+                             Text="{Binding RecipeNameWordsText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Text="字（按最长条码填）" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="3" Text="完成位" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Height="32" VerticalContentAlignment="Center"
+                         Text="{Binding DoneBitText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Row="3" Grid.Column="3" Text="失败位" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <TextBox Grid.Row="3" Grid.Column="4" Height="32" VerticalContentAlignment="Center"
+                         Text="{Binding FailBitText, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Grid.Row="4" Text="匹配规则" VerticalAlignment="Top" Margin="0,8,0,0" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="4" Text="下载：按 PLC 写入的配方名字符查找同名配方，名字不存在则置失败位；上传：同名更新其值，新名字自动建配方（结构复制设备第一个配方）" VerticalAlignment="Top" Margin="0,8,0,8" FontSize="11"
+                       TextWrapping="Wrap" Foreground="{DynamicResource Brush.Text.Secondary}"/>
+
+            <TextBlock Grid.Row="5" Text="配方标识地址" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                       ToolTip="下载成功后自动把“配方名|v版本”写入该字地址区（水印），供产线/MES 核对设备在用配方；留空 = 不写标识"/>
+            <TextBox Grid.Row="5" Grid.Column="1" Height="32" VerticalContentAlignment="Center"
+                     Text="{Binding RecipeTagText, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Grid.Row="5" Grid.Column="3" Text="标识字数" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Text.Secondary}"
+                       ToolTip="标识区占用的字数（每字 2 字节），需容纳“配方名|v版本”（UTF-8，汉字 3 字节/字符）"/>
+            <StackPanel Grid.Row="5" Grid.Column="4" Orientation="Horizontal">
+                <TextBox Width="70" Height="32" VerticalContentAlignment="Center"
+                         Text="{Binding RecipeTagWordsText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Text="字（默认 12）" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="11"
+                           Foreground="{DynamicResource Brush.Text.Secondary}"/>
+            </StackPanel>
+            </Grid>
+        </Expander>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="保存" Width="110" Height="38" Margin="0,0,10,0" Click="Ok_Click"
+                    Background="{DynamicResource Brush.Primary}" Foreground="White" BorderThickness="0"/>
+            <Button Content="取消" Width="110" Height="38" Click="Cancel_Click"
+                    Background="{DynamicResource Brush.Secondary.Bg}" Foreground="{DynamicResource Brush.Text.Primary}"
+                    BorderBrush="{DynamicResource Brush.Border}"/>
+        </StackPanel>
+    </StackPanel></ScrollViewer>
+</Window>

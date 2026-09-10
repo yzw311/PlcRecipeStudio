@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="PlcRecipe.Core/PlcRecipe.Core.csproj" />
+  <Project Path="PlcRecipe.Drivers/PlcRecipe.Drivers.csproj" />
+  <Project Path="PlcRecipe.Infrastructure/PlcRecipe.Infrastructure.csproj" />
+  <Project Path="PlcRecipe.StressTest/PlcRecipe.StressTest.csproj" />
+  <Project Path="PlcRecipe.Tests/PlcRecipe.Tests.csproj" />
+  <Project Path="PlcRecipe.WpfApp/PlcRecipe.WpfApp.csproj" />
+</Solution>

@@ -1,0 +1,21 @@
+# Build outputs and local state
+**/bin/
+**/obj/
+.vs/
+artifacts/
+publish/
+TestResults/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+settings.json
+settings.*.json
+*.pfx
+*.pem
+*.key
+
+# IDE and OS files
+.DS_Store
+Thumbs.db

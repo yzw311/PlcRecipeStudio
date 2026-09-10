@@ -1,0 +1,222 @@
+<UserControl x:Class="PlcRecipe.WpfApp.Views.Pages.WorkbenchPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.05*" MinWidth="170"/>
+            <ColumnDefinition Width="0.95*" MinWidth="145"/>
+            <ColumnDefinition Width="2.4*" MinWidth="300"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══ 第 1 列：设备 ═══ -->
+        <Border Grid.Column="0" Style="{DynamicResource CardBorder}" Margin="0,0,8,0">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock Text="设备" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"
+                               Foreground="{DynamicResource Brush.Text.Primary}"/>
+                    <Button Content="＋" Command="{Binding NewDeviceCommand}" Width="26" Height="26" FontSize="15"
+                            HorizontalAlignment="Right" BorderThickness="0" Cursor="Hand"
+                            Background="{DynamicResource Brush.Primary}" Foreground="{DynamicResource Brush.Text.OnAccent}"
+                            ToolTip="新增设备"/>
+                </Grid>
+                <ListBox ItemsSource="{Binding DeviceList}" SelectedItem="{Binding SelectedDeviceCard}"
+                         Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <!-- Tag 中转 ViewModel：ContextMenu 不在视觉树内，其内部 FindAncestor 不可用 -->
+                            <StackPanel Orientation="Horizontal" Margin="1"
+                                        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}">
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu Tag="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                        <MenuItem Header="连接" Command="{Binding PlacementTarget.Tag.ConnectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="断开" Command="{Binding PlacementTarget.Tag.DisconnectCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <Separator/>
+                                        <MenuItem Header="编辑设备" Command="{Binding PlacementTarget.Tag.EditDeviceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="删除设备" Command="{Binding PlacementTarget.Tag.DeleteDeviceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
+                                <Ellipse Width="9" Height="9" Margin="0,0,7,0" VerticalAlignment="Center"
+                                         Fill="{Binding StateDot, Converter={StaticResource KeyToBrush}}"/>
+                                <TextBlock Text="{Binding Device.Name}" FontWeight="Bold" FontSize="13"
+                                           Foreground="{DynamicResource Brush.Text.Primary}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding StateText}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- ═══ 第 2 列：配方 ═══ -->
+        <Border Grid.Column="1" Style="{DynamicResource CardBorder}" Margin="0,0,8,0">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock Text="配方" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"
+                               Foreground="{DynamicResource Brush.Text.Primary}"/>
+                    <Button Content="＋" Command="{Binding NewRecipeCommand}" Width="26" Height="26" FontSize="15"
+                            HorizontalAlignment="Right" BorderThickness="0" Cursor="Hand"
+                            Background="{DynamicResource Brush.Primary}" Foreground="{DynamicResource Brush.Text.OnAccent}"
+                            ToolTip="新建配方"/>
+                </Grid>
+                <ListBox ItemsSource="{Binding RecipeList}" SelectedItem="{Binding SelectedRecipe}"
+                         Background="Transparent" BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <!-- Tag 中转 ViewModel（同设备菜单：ContextMenu 内 FindAncestor 不可用） -->
+                            <StackPanel Margin="1"
+                                        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}">
+                                <StackPanel.ContextMenu>
+                                    <ContextMenu Tag="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                        <MenuItem Header="复制配方" Command="{Binding PlacementTarget.Tag.CopyRecipeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="重命名" Command="{Binding PlacementTarget.Tag.RenameRecipeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="历史版本" Command="{Binding PlacementTarget.Tag.VersionHistoryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="导出 Excel" Command="{Binding PlacementTarget.Tag.ExportCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="导入 Excel" Command="{Binding PlacementTarget.Tag.ImportCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <Separator/>
+                                        <MenuItem Header="删除配方" Command="{Binding PlacementTarget.Tag.DeleteRecipeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                    </ContextMenu>
+                                </StackPanel.ContextMenu>
+                                <TextBlock FontWeight="Bold" FontSize="13"
+                                           Foreground="{DynamicResource Brush.Text.Primary}">
+                                    <Run Text="#"/><Run Text="{Binding PlcNo, Mode=OneWay}"/><Run Text="  "/><Run Text="{Binding Name}"/>
+                                </TextBlock>
+                                <TextBlock FontSize="10" Foreground="{DynamicResource Brush.Text.Secondary}">
+                                    <Run Text="v"/><Run Text="{Binding Version, Mode=OneWay}"/>
+                                    <Run Text=" · "/><Run Text="{Binding Items.Count, Mode=OneWay}"/><Run Text=" 行"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- ═══ 第 3 列：数据行 + 上传下载 ═══ -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 数据行 -->
+            <Border Grid.Row="0" Style="{DynamicResource CardBorder}" Margin="0,0,0,8">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <WrapPanel>
+                            <TextBlock FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0"
+                                       Foreground="{DynamicResource Brush.Text.Primary}">
+                                <Run Text="配方数据 — "/><Run Text="{Binding SelectedRecipe.Name, Mode=OneWay}"/>
+                            </TextBlock>
+                            <Button Content="＋ 添加行" Command="{Binding AddRowCommand}" Height="28" Padding="10,0" Margin="0,0,6,0"
+                                    Background="{DynamicResource Brush.Primary}" Foreground="{DynamicResource Brush.Text.OnAccent}" BorderThickness="0"/>
+                            <Button Content="＋ 批量添加" Command="{Binding AddRowsRangeCommand}" Height="28" Padding="10,0" Margin="0,0,6,0"
+                                    Background="{DynamicResource Brush.Primary.Light}"
+                                    Foreground="{DynamicResource Brush.Primary}" BorderThickness="0"/>
+                            <Button Content="删除行" Command="{Binding DeleteRowCommand}" Height="28" Padding="10,0" Margin="0,0,6,0"
+                                    Background="{DynamicResource Brush.Danger.Light}"
+                                    Foreground="{DynamicResource Brush.Danger}" BorderThickness="0"/>
+                        </WrapPanel>
+                        <Button Content="保存配方" Command="{Binding SaveRowsCommand}" Width="96" Height="28"
+                                HorizontalAlignment="Right"
+                                Background="{DynamicResource Brush.Success}" Foreground="{DynamicResource Brush.Text.OnAccent}" BorderThickness="0"/>
+                    </Grid>
+
+                    <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" SelectionMode="Single" RowHeight="32"
+                              MinColumnWidth="45" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                              AlternationCount="2"
+                              Background="Transparent" BorderThickness="0"
+                                                            Foreground="{DynamicResource Brush.Text.Primary}"
+                              GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource Brush.Divider}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="变量名" Binding="{Binding Item.Name, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                            <DataGridTextColumn Header="PLC 地址" Binding="{Binding Item.Address, UpdateSourceTrigger=PropertyChanged}" Width="95"/>
+                            <DataGridTextColumn Header="校验" Binding="{Binding AddressError, TargetNullValue=✔}" IsReadOnly="True" Width="90"/>
+                            <DataGridTextColumn Header="类型" Binding="{Binding Item.DataType}" IsReadOnly="True" Width="60"/>
+                            <DataGridTextColumn Header="值" Binding="{Binding Item.Value, UpdateSourceTrigger=PropertyChanged}" Width="*" MinWidth="55"/>
+                            <DataGridTextColumn Header="下限" Binding="{Binding Item.LowerLimit, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Null}}" Width="48"/>
+                            <DataGridTextColumn Header="上限" Binding="{Binding Item.UpperLimit, UpdateSourceTrigger=PropertyChanged, TargetNullValue={x:Null}}" Width="48"/>
+                            <DataGridTextColumn Header="单位" Binding="{Binding Item.Unit, UpdateSourceTrigger=PropertyChanged}" Width="45"/>
+                            <DataGridTextColumn Header="备注" Binding="{Binding Item.Remark, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Border>
+
+            <!-- 上传下载 -->
+            <Border Grid.Row="1" Style="{DynamicResource CardBorder}">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <TextBlock Text="上传 / 下载（勾选批量目标 = 同品牌其他设备）" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource Brush.Text.Secondary}"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="⬇ 下载" Command="{Binding DownloadCommand}" Height="32" Padding="16,0" Margin="0,0,8,0"
+                                    Background="{DynamicResource Brush.Success}" Foreground="{DynamicResource Brush.Text.OnAccent}" BorderThickness="0" FontWeight="Bold"/>
+                            <Button Content="⬆ 上传" Command="{Binding UploadCommand}" Height="32" Padding="16,0" Margin="0,0,8,0"
+                                    Background="{DynamicResource Brush.Primary}" Foreground="{DynamicResource Brush.Text.OnAccent}" BorderThickness="0" FontWeight="Bold"/>
+                            <Button Content="⚖ 对比" Command="{Binding CompareCommand}" Height="32" Padding="16,0"
+                                    Background="{DynamicResource Brush.Warning}" Foreground="White" BorderThickness="0" FontWeight="Bold"/>
+                        </StackPanel>
+                    </WrapPanel>
+
+                    <!-- 批量目标勾选 -->
+                    <ScrollViewer DockPanel.Dock="Top" MaxHeight="66" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8">
+                        <ItemsControl ItemsSource="{Binding Targets}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Device.Name}" IsChecked="{Binding IsSelected}" Margin="0,2,14,2"
+                                              Foreground="{DynamicResource Brush.Text.Primary}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- 执行状态 -->
+                    <ListView ItemsSource="{Binding TransferRows}" BorderThickness="0" Background="Transparent"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource Brush.Divider}" BorderThickness="0,0,0,1" Padding="0,3">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="70"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding DeviceName}" FontWeight="Bold" FontSize="12"
+                                                   Foreground="{DynamicResource Brush.Text.Primary}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="12"
+                                                   Foreground="{DynamicResource Brush.Text.Secondary}" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <ProgressBar Grid.Column="2" Value="{Binding Progress}" Maximum="100" Height="6"
+                                                     Background="{DynamicResource Brush.Secondary.Bg}"
+                                                     Foreground="{DynamicResource Brush.Primary}"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding DurationMs, StringFormat='{}{0} ms'}" FontSize="11" HorizontalAlignment="Right"
+                                                   Foreground="{DynamicResource Brush.Text.Secondary}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

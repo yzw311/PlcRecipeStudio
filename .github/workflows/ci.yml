@@ -1,0 +1,40 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore PlcRecipe.WpfApp/PlcRecipe.WpfApp.csproj
+        
+      - name: Build
+        run: dotnet build PlcRecipe.WpfApp/PlcRecipe.WpfApp.csproj --no-restore -c Release
+
+      - name: Test
+        run: dotnet test PlcRecipe.Tests/PlcRecipe.Tests.csproj -c Release
+
+      - name: Publish WPF app
+        run: dotnet publish PlcRecipe.WpfApp/PlcRecipe.WpfApp.csproj -c Release -r win-x64 --self-contained true -o artifacts/WpfApp
+
+      - name: Publish API host
+        run: dotnet publish PlcRecipe.Server/PlcRecipe.Server.csproj -c Release -o artifacts/Server
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlcRecipeStudio
+          path: artifacts/

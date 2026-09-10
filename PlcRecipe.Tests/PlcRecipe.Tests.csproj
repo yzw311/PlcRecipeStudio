@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HslCommunication" Version="13.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="xunit" Version="2.7.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.85" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlcRecipe.Core\PlcRecipe.Core.csproj" />
+    <ProjectReference Include="..\PlcRecipe.Drivers\PlcRecipe.Drivers.csproj" />
+    <ProjectReference Include="..\PlcRecipe.Infrastructure\PlcRecipe.Infrastructure.csproj" />
+    <ProjectReference Include="..\PlcRecipe.WpfApp\PlcRecipe.WpfApp.csproj" />
+  </ItemGroup>
+
+</Project>
