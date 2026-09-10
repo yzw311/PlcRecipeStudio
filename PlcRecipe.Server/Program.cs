@@ -71,7 +71,7 @@ app.Use(async (context, next) =>
     // Optional role mapping: ApiKeyRoles = "reader:key1;engineer:key2;admin:key3". Legacy ApiKey is admin.
     var role = UserRole.Admin;
     var roles = settings.GetType().GetProperty("ApiKeyRoles")?.GetValue(settings)?.ToString();
-    if (!string.IsNullOrWhiteSpace(roles)) { role = roles.Split(';').Select(x => x.Split(':', 2)).Where(x => x.Length == 2 && ApiKeyGuard.Equals(provided!, x[1])).Select(x => x[0].ToLowerInvariant()).Select(x => x switch { "reader" => UserRole.Viewer, "engineer" => UserRole.Engineer, _ => UserRole.Admin }).FirstOrDefault(UserRole.Admin); }
+    if (!string.IsNullOrWhiteSpace(roles)) { role = roles.Split(';').Select(x => x.Split(':', 2)).Where(x => x.Length == 2 && ApiKeyGuard.Equals(provided!, x[1])).Select(x => x[0].ToLowerInvariant()).Select(x => x switch { "reader" => UserRole.Operator, "engineer" => UserRole.Engineer, _ => UserRole.Admin }).FirstOrDefault(UserRole.Admin); }
     context.Items["ApiRole"] = role;
     context.RequestServices.GetRequiredService<ICurrentUserService>().Set(new User { Id = 0, UserName = "api-service", Role = role });
     await next();
