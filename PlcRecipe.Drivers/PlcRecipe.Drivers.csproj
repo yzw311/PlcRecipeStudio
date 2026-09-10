@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <PackageId>PlcRecipe.Drivers</PackageId>
+    <IsPackable>false</IsPackable>
     <Version>0.1.0</Version>
     <Authors>yzw311</Authors>
     <Description>PLC client drivers for Modbus, Siemens S7, Mitsubishi MC, Omron FINS, and mock testing.</Description>

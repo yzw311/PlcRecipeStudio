@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="PlcRecipe.Core/PlcRecipe.Core.csproj" />
   <Project Path="PlcRecipe.Drivers/PlcRecipe.Drivers.csproj" />
+  <Project Path="PlcRecipe/PlcRecipe.csproj" />
   <Project Path="PlcRecipe.Server/PlcRecipe.Server.csproj" />
   <Project Path="PlcRecipe.StressTest/PlcRecipe.StressTest.csproj" />
   <Project Path="PlcRecipe.Tests/PlcRecipe.Tests.csproj" />

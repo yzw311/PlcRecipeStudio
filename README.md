@@ -7,7 +7,17 @@
 
 ![设备总览](docs/ui-design/02-device-overview.png)
 
-## 功能总览
+## NuGet 单包使用
+
+普通 .NET 项目只需安装一个包：
+
+```bash
+dotnet add package PlcRecipe --version 0.2.0
+```
+
+`PlcRecipe` 是 Core 与 Drivers 的单一程序集包，不依赖旧的 `PlcRecipe.Core` 或 `PlcRecipe.Drivers` 包；它只声明 `S7netplus` 和 `System.IO.Ports` 运行时依赖。已有项目升级时应移除旧包引用，避免重复类型。WPF 桌面应用本身请从源码构建或使用 GitHub Actions 发布的 Windows 构建产物，不作为普通 NuGet 库引用。
+
+
 
 - **设备总览**：PLC 在线状态、卡片式连接/断开、信号联动地址配置、配方水印（在用版本回读核对）
 - **配方管理**：新建/复制/重命名/删除、数据行编辑（上下限/备注）、Excel 导入导出、Excel 上传改动直接写 txt
@@ -50,8 +60,9 @@ SavedAtUtc=2026-09-09T08:00:00.0000000Z
 
 ```
 PlcRecipeStudio/
-├── PlcRecipe.Core               实体/枚举/接口/地址解析/值编解码（零依赖）
-├── PlcRecipe.Drivers            IPlcClient 抽象 + 5 驱（S7netplus / 自写 MC 3E / 自写 FINS / 自写 Modbus TCP+RTU / Mock）
+├── PlcRecipe.Core               源码模块（由 PlcRecipe 包合并编译）
+├── PlcRecipe.Drivers            源码模块（由 PlcRecipe 包合并编译）
+├── PlcRecipe                    Core + Drivers 单一 NuGet 包（不依赖旧包）
 ├── PlcRecipe.Infrastructure     EF Core（SQLite/MySQL）+ 配方文件库 + 信号监视 + 备份 + 服务层
 ├── PlcRecipe.Server             ASP.NET Core API 宿主（REST + SignalR + 健康检查）
 ├── PlcRecipe.WpfApp             WPF UI（MVVM + HandyControl + 亮/暗双主题 + Generic Host DI）
@@ -76,6 +87,8 @@ dotnet test PlcRecipe.Tests   # 175 项：166 通过 + 9 跳过(待真机).
 ```bash
 scripts\deploy.cmd
 ```
+
+NuGet 单包入口为 `PlcRecipe`，包含 Core 与 Drivers 的源码编译结果，仅声明 `S7netplus` 和 `System.IO.Ports` 依赖。已有项目若同时引用 `PlcRecipe.Core` 或 `PlcRecipe.Drivers`，升级时必须移除旧引用，避免重复类型。
 
 产出 `publish\WpfApp\`（拷贝即用，无需安装 .NET）与 `publish\Server\`（dotnet 启动 MES 宿主）。
 
